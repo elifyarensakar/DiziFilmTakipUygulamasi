@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:dizifilmtakip/lib/screens/icerik_ara_sayfasi.dart';
 
 void main() {
   runApp(MyApp());
@@ -10,45 +11,233 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Backend Test',
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Kayıt Testi'),
-        ),
-        body: Center(
-          child: KayitButonu(),
+      title: 'Dizi Film Takip',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: GirisSayfasi(),
+    );
+  }
+}
+
+// ======================== GİRİŞ SAYFASI ========================
+class GirisSayfasi extends StatefulWidget {
+  @override
+  _GirisSayfasiState createState() => _GirisSayfasiState();
+}
+
+class _GirisSayfasiState extends State<GirisSayfasi> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController sifreController = TextEditingController();
+
+  Future<void> girisYap() async {
+    try {
+      final url = Uri.parse('http://10.0.2.2:5000/giris');
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": emailController.text,
+          "sifre": sifreController.text,
+        }),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      final cevap = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => AnaSayfa(kullaniciEmail: emailController.text),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(cevap['hata'] ?? 'Bir hata oluştu')),
+        );
+      }
+    } catch (e) {
+      print('Hata oluştu: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sunucuya bağlanılamadı. Hata: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Giriş Yap')),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(labelText: 'E-posta'),
+            ),
+            TextField(
+              controller: sifreController,
+              decoration: InputDecoration(labelText: 'Şifre'),
+              obscureText: true,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(onPressed: girisYap, child: Text('Giriş Yap')),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => KayitSayfasi()),
+                );
+              },
+              child: Text('Kaydol'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => IcerikAraSayfasi(
+                          kullaniciEmail: widget.kullaniciEmail,
+                        ),
+                  ),
+                );
+              },
+              child: Text('İçerik Ara ve Ekle'),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class KayitButonu extends StatelessWidget {
+// ======================== KAYIT SAYFASI ========================
+class KayitSayfasi extends StatefulWidget {
+  @override
+  _KayitSayfasiState createState() => _KayitSayfasiState();
+}
+
+class _KayitSayfasiState extends State<KayitSayfasi> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController sifreController = TextEditingController();
+  final TextEditingController kullaniciAdiController = TextEditingController();
+  final TextEditingController dogumTarihiController = TextEditingController();
+
   Future<void> kaydol() async {
-    final url = Uri.parse('http://10.0.2.2:5000/kaydol'); // emülatör için
+    try {
+      final url = Uri.parse('http://10.0.2.2:5000/kaydol');
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": emailController.text,
+          "sifre": sifreController.text,
+          "kullanici_adi": kullaniciAdiController.text,
+          "dogum_tarihi": dogumTarihiController.text,
+        }),
+      );
 
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "isim": "Elif",
-        "email": "elif@example.com",
-        "sifre": "123456"
-      }),
-    );
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
-    if (response.statusCode == 201) {
-      print("Kayıt başarılı: ${response.body}");
-    } else {
-      print("Hata oluştu: ${response.statusCode} - ${response.body}");
+      final cevap = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(cevap['durum'] ?? 'Kayıt başarılı!')),
+        );
+        Navigator.pop(context); // Başarılı kayıt sonrası giriş ekranına dön
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(cevap['hata'] ?? 'Bir hata oluştu')),
+        );
+      }
+    } catch (e) {
+      print('Hata oluştu: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sunucuya bağlanılamadı. Hata: $e')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: kaydol,
-      child: Text("KAYDOL"),
+    return Scaffold(
+      appBar: AppBar(title: Text('Kayıt Ol')),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(labelText: 'E-posta'),
+            ),
+            TextField(
+              controller: sifreController,
+              decoration: InputDecoration(labelText: 'Şifre'),
+              obscureText: true,
+            ),
+            TextField(
+              controller: kullaniciAdiController,
+              decoration: InputDecoration(labelText: 'Kullanıcı Adı'),
+            ),
+            TextField(
+              controller: dogumTarihiController,
+              decoration: InputDecoration(
+                labelText: 'Doğum Tarihi (GG/AA/YYYY)',
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(onPressed: kaydol, child: Text('Kaydol')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ======================== ANA SAYFA ========================
+class AnaSayfa extends StatefulWidget {
+  final String kullaniciEmail;
+
+  AnaSayfa({required this.kullaniciEmail});
+
+  @override
+  _AnaSayfaState createState() => _AnaSayfaState();
+}
+
+class _AnaSayfaState extends State<AnaSayfa> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Ana Sayfa')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Hoş geldin, ${widget.kullaniciEmail}!'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => IcerikAraSayfasi(
+                          kullaniciEmail: widget.kullaniciEmail,
+                        ),
+                  ),
+                );
+              },
+              child: Text('İçerik Ara ve Ekle'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
