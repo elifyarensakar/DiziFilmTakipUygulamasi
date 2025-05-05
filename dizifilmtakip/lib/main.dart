@@ -94,20 +94,7 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
               },
               child: Text('Kaydol'),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => IcerikAraSayfasi(
-                          kullaniciEmail: widget.kullaniciEmail,
-                        ),
-                  ),
-                );
-              },
-              child: Text('İçerik Ara ve Ekle'),
-            ),
+           
           ],
         ),
       ),
@@ -241,8 +228,6 @@ class _AnaSayfaState extends State<AnaSayfa> {
     );
   }
 }
-
-
 /*class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

@@ -28,15 +28,112 @@ def icerik_listesi():
     
     data = response.json()
 
+
+
+
     if data.get('Response')=='True':
         return jsonify(data['Search']), 200
     else:   
         return jsonify({"hata": data.get('Hata', 'İcerik bulunamadi')}), 404
     
+@app.route('/izleme-kaydi-ekle', methods=['POST'])
+def izleme_kaydi_ekle():
+    data = request.json
+
+    required_fields = ['userId', 'contentId', 'title', 'type', 'status']
+    if not all(field in data for field in required_fields):
+        return jsonify({"message": "Eksik alan var."}), 400
+
+    user_id = data['userId']
+    content_id = data['contentId']
+    title = data['title']
+    content_type = data['type']
+    status = data['status']
+    current_season = data.get('currentSeason', 1 if content_type == 'dizi' else None)
+    current_episode = data.get('currentEpisode', 1 if content_type == 'dizi' else None)
+
+    # Firestore'a ekleme
+    doc_ref = db.collection('users').document(user_id).collection('watchlist').document()
+
+    doc_ref.set({
+        "contentId": content_id,
+        "title": title,
+        "type": content_type,
+        "status": status,
+        "currentSeason": current_season,
+        "currentEpisode": current_episode,
+        "rating": None,
+        "comment": None,
+        "createdAt": firestore.SERVER_TIMESTAMP,
+        "updatedAt": firestore.SERVER_TIMESTAMP
+    })
+
+    return jsonify({"message": "İzleme kaydı başarıyla eklendi."}), 201
+
+@app.route('/izleme-kaydi-listele/<user_id>', methods=['GET'])
+def izleme_kaydi_listele(user_id):
+    try:
+        watchlist_ref = db.collection('users').document(user_id).collection('watchlist')
+        docs = watchlist_ref.stream()
+
+        watchlist = []
+        for doc in docs:
+            data = doc.to_dict()
+            data['id'] = doc.id  # doküman ID'sini de dahil edelim
+            watchlist.append(data)
+
+        return jsonify(watchlist), 200
+
+    except Exception as e:
+        print("Hata:", e)
+        return jsonify({"message": "Sunucu hatası"}), 500
+
+
+@app.route('/izleme-kaydi-guncelle/<user_id>/<watch_id>', methods=['PATCH'])
+def izleme_kaydi_guncelle(user_id, watch_id):
+    try:
+        data = request.json
+
+        update_fields = {}
+        for field in ['status', 'currentSeason', 'currentEpisode', 'rating', 'comment']:
+            if field in data:
+                update_fields[field] = data[field]
+
+        if not update_fields:
+            return jsonify({"message": "Güncellenecek alan yok."}), 400
+
+        update_fields['updatedAt'] = firestore.SERVER_TIMESTAMP
+
+        print(f"GÜNCELLENECEK -> user_id: {user_id}, watch_id: {watch_id}")
+        print(f"UPDATE FIELDS: {update_fields}")
+
+        doc_ref = db.collection('users').document(user_id).collection('watchlist').document(watch_id)
+        doc_ref.update(update_fields)
+
+        print(" Güncelleme başarılı!")
+        return jsonify({"message": "İzleme kaydı güncellendi."}), 200
+
+    except Exception as e:
+        print(" Güncelleme hatası:", str(e))
+        return jsonify({"message": "Sunucu hatası."}), 500
+
+
+@app.route('/izleme-kaydi-sil/<user_id>/<watch_id>', methods=['DELETE'])
+def izleme_kaydi_sil(user_id, watch_id):
+    try:
+        doc_ref = db.collection('users').document(user_id).collection('watchlist').document(watch_id)
+        doc_ref.delete()
+        return jsonify({"message": "İzleme kaydı silindi."}), 200
+
+    except Exception as e:
+        print("Hata:", e)
+        return jsonify({"message": "Sunucu hatası."}), 500
+
+
 
 
 # Firebase initialization
-cred = credentials.Certificate("C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/backend/firebase_config.json")
+cred = credentials.Certificate("C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamasi/backend/firebase_config.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
  
@@ -102,4 +199,4 @@ def giris():
     return jsonify({"hata": "Email veya şifre yanlış."}), 401
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True) 
