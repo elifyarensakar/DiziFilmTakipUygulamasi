@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:dizifilmtakip/lib/screens/icerik_ara_sayfasi.dart';
+import 'package:dizifilmtakip/lib/screens/devam_tahmin_ekrani.dart';
 
 void main() {
   runApp(MyApp());
@@ -11,9 +12,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Dizi Film Takip',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: GirisSayfasi(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => GirisSayfasi(),
+        '/devam': (context) => DevamTahminEkrani(),
+      },
     );
   }
 }
@@ -94,7 +100,6 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
               },
               child: Text('Kaydol'),
             ),
-           
           ],
         ),
       ),
@@ -221,6 +226,14 @@ class _AnaSayfaState extends State<AnaSayfa> {
                 );
               },
               child: Text('İçerik Ara ve Ekle'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(
+                  context, '/devam',
+                );
+              },
+              child: Text('Devam Noktası Tahmini'),
             ),
           ],
         ),

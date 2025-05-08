@@ -3,12 +3,63 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from flask_cors import CORS
 import requests
+import openai
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+
+
+app = Flask(__name__)
+CORS(app)
 
 
 OMDB_API_KEY= '157be653'
 
-app = Flask(__name__)
-CORS(app)  # CORS ayarları
+
+
+@app.route('/devam-noktasi-tahmin', methods=['POST'])
+def devam_noktasi_tahmin():
+    try:
+        data = request.get_json()
+        diziAdi = data.get("diziAdi")
+        cevaplar = data.get("cevaplar", [])
+
+        if not diziAdi or not cevaplar:
+            return jsonify({"message": "Eksik veri."}), 400
+        
+        # DENEMEK İÇİN YAZDIM (chatgpt yok burası devrede)
+       # tahmin = "Sezon 5, Bölüm 4" 
+
+       # return jsonify({"tahmin": tahmin}), 200
+
+        prompt = (
+            f"Kullanıcı '{diziAdi}' dizisinde nerde kaldığını hatırlamıyor. "
+            f"Aşağıda dizinin bazı bölümleriyle ilgili cevaplar var:\n"
+            f"{cevaplar}\n"
+            f"Bu verilere göre izlemeye devam etmesi gereken sezon ve bölümü tahmin et. "
+            f"Sadece şu formatta yanıt ver: Sezon X, Bölüm Y"
+     )
+
+
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.6
+        )
+
+        
+        print("OpenAI yanıtı:", response)
+
+        yanit = response['choices'][0]['message']['content']
+        return jsonify({"tahmin": yanit}), 200
+
+    except Exception as e:
+        print("Tahmin hatası:", str(e))
+        return jsonify({"message": "Sunucu hatası."}), 500
+
 
 @app.route('/icerik-listesi', methods=['GET'])
 def icerik_listesi():
