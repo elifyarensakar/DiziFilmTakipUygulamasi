@@ -3,18 +3,26 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from flask_cors import CORS
 import requests
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+print("API KEY:", os.getenv("OPENAI_API_KEY"))
 
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app) 
 
+cred = credentials.Certificate("C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/backend/firebase_config.json")  
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred)
+
+
+
+db = firestore.client()
 
 OMDB_API_KEY= '157be653'
 
@@ -31,10 +39,8 @@ def devam_noktasi_tahmin():
             return jsonify({"message": "Eksik veri."}), 400
         
         # DENEMEK İÇİN YAZDIM (chatgpt yok burası devrede)
-       # tahmin = "Sezon 5, Bölüm 4" 
-
-       # return jsonify({"tahmin": tahmin}), 200
-
+        dummy_tahmin = "Sezon 3, Bölüm 5"
+        return jsonify({"tahmin": dummy_tahmin}), 200
         prompt = (
             f"Kullanıcı '{diziAdi}' dizisinde nerde kaldığını hatırlamıyor. "
             f"Aşağıda dizinin bazı bölümleriyle ilgili cevaplar var:\n"
@@ -44,13 +50,20 @@ def devam_noktasi_tahmin():
      )
 
 
-        response = openai.ChatCompletion.create(
+       
+       
+
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.6
+            temperature=0.7
         )
 
-        
+        yanit = response.choices[0].message.content
+
+
+        print("Prompt:", prompt)
+
         print("OpenAI yanıtı:", response)
 
         yanit = response['choices'][0]['message']['content']
@@ -85,7 +98,7 @@ def icerik_listesi():
     if data.get('Response')=='True':
         return jsonify(data['Search']), 200
     else:   
-        return jsonify({"hata": data.get('Hata', 'İcerik bulunamadi')}), 404
+        return jsonify([]), 200
     
 @app.route('/izleme-kaydi-ekle', methods=['POST'])
 def izleme_kaydi_ekle():
@@ -183,12 +196,6 @@ def izleme_kaydi_sil(user_id, watch_id):
 
 
 
-# Firebase initialization
-cred = credentials.Certificate("C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamasi/backend/firebase_config.json")
-firebase_admin.initialize_app(cred)
-db = firestore.client()
- 
-
 # Flask uygulaması için gerekli ayarlar
 @app.route('/')
 def hello():
@@ -199,6 +206,40 @@ def selamla():
     data = request.json  
     isim = data.get('isim', 'isim yok')
     return jsonify({"mesaj": f"Merhaba {isim}!"})
+
+@app.route('/oneri-chatbotu', methods=['POST'])
+def oneri_chatbotu():
+    data = request.get_json()
+    mesaj = data.get("mesaj")
+
+    if not mesaj:
+        return jsonify({"message": "Mesaj boş olamaz."}), 400
+    
+    print("Mesaj:", mesaj)
+
+    dummy_cevap = "Önerim: 'The Office' ve 'Modern Family'. Çünkü ruh halin biraz hüzünlü ama keyif arıyorsun :)"
+    return jsonify({"message": dummy_cevap}), 200
+
+    prompt = (
+        f"Kullanıcı şu isteği yazdı: '{mesaj}'. "
+        f"Buna göre ruh haline ve tür tercihlerine uygun 1-2 dizi veya film öner. "
+        f"Sadece öneri isimlerini ve neden uygun olduklarını kısa şekilde belirt."
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+
+        yanit = response.choices[0].message.content
+        return jsonify({"message": yanit}), 200
+
+    except Exception as e:
+        print("Chatbot hatası:", str(e))
+        return jsonify({"message": "Chatbot hatası"}), 500
+
 
 
 #firebase ile kullanıcı kaydı için bir endpoint ekleyelim
@@ -215,39 +256,42 @@ def kaydol():
     sifre = data.get("sifre")
     kullanici_adi = data.get("kullanici_adi")
     dogum_tarihi = data.get("dogum_tarihi")
+    if not all([email, sifre, kullanici_adi, dogum_tarihi]):
+        return jsonify({"hata": "Tüm alanlar gereklidir"}), 400
 
-    if not email or not sifre or not kullanici_adi or not dogum_tarihi:
-        return jsonify({"hata": "Email, şifre, kullanıcı adı ve doğum tarihi zorunludur."}), 400
-    
-    kullanici_bilgisi = {
+    user_ref = db.collection('kullanicilar').document(email)
+    if user_ref.get().exists:
+        return jsonify({"hata": "Bu e-posta ile kullanıcı zaten var"}), 400
+
+    user_ref.set({
         "email": email,
         "sifre": sifre,
         "kullanici_adi": kullanici_adi,
-        "dogum_tarihi": dogum_tarihi
-    }
+        "dogum_tarihi": dogum_tarihi,
+    })
+
+    return jsonify({"durum": "Kayıt başarılı"}), 201
 
 
-    db.collection('kullanicilar').add(data)
-
-    return jsonify({"durum": "Kayıt başarılı!"}), 201
+    
 
 @app.route('/giris', methods=['POST'])
 def giris():
-    data = request.json
-    email = data.get("email")
-    sifre = data.get("sifre")
+    data = request.get_json()
+    email = data.get('email')
+    sifre = data.get('sifre')
 
     if not email or not sifre:
-        return jsonify({"hata": "Email ve şifre zorunludur."}), 400
+        return jsonify({"hata": "Email ve şifre gerekli"}), 400
 
-    # Firestore'dan kullanıcıyı ara
-    kullanici_ref = db.collection('kullanicilar')
-    sorgu = kullanici_ref.where("email", "==", email).where("sifre", "==", sifre).stream()
+    user_ref = db.collection('kullanicilar').document(email)
+    user = user_ref.get()
 
-    for doc in sorgu:
-        return jsonify({"mesaj": "Giriş başarılı!", "kullanici_id": doc.id}), 200
+    if not user.exists or user.to_dict().get("sifre") != sifre:
+        return jsonify({"hata": "Email veya şifre yanlış"}), 401
 
-    return jsonify({"hata": "Email veya şifre yanlış."}), 401
+    return jsonify({"durum": "Giriş başarılı"}), 200
+
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(host='0.0.0.0', port=5000,debug=True) 

@@ -1,0 +1,8 @@
+{
+  "OutputFoldersPerTargetSystem": {
+    "Local Machine": [
+      "dizifilmtakip\\windows\\out\\build\\x64-Debug",
+      "dizifilmtakip\\windows\\out\\install\\x64-Debug"
+    ]
+  }
+}

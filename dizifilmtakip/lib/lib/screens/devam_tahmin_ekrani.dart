@@ -18,7 +18,7 @@ class _DevamTahminEkraniState extends State<DevamTahminEkrani> {
       tahminSonucu = null;
     });
 
-    final url = Uri.parse('http://10.0.2.2:5000/devam-noktasi-tahmin');
+    final url = Uri.parse('http://172.18.151.65:5000/devam-noktasi-tahmin');
 
     final cevap = await http.post(
       url,

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+
 import 'package:dizifilmtakip/lib/screens/icerik_ara_sayfasi.dart';
 import 'package:dizifilmtakip/lib/screens/devam_tahmin_ekrani.dart';
+import 'package:dizifilmtakip/lib/screens/oneri_chatbot_ekrani.dart';
+import 'package:dizifilmtakip/lib/screens/profil_sayfasi.dart';
 
 void main() {
   runApp(MyApp());
@@ -12,13 +16,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Dizi Film Takip',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/',
       routes: {
         '/': (context) => GirisSayfasi(),
         '/devam': (context) => DevamTahminEkrani(),
+        '/oneri': (context) => OneriChatbotEkrani(),
+        '/profil': (context) {
+          final email = ModalRoute.of(context)!.settings.arguments as String;
+          return ProfilSayfasi(kullaniciEmail: email);
+        },
+        '/arama': (context) {
+          final email = ModalRoute.of(context)!.settings.arguments as String;
+          return IcerikAraSayfasi(kullaniciEmail: email);
+        },
+        '/anasayfa': (context) {
+          final email = ModalRoute.of(context)!.settings.arguments as String;
+          return AnaSayfa(kullaniciEmail: email);
+        },
       },
     );
   }
@@ -36,7 +53,7 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
 
   Future<void> girisYap() async {
     try {
-      final url = Uri.parse('http://10.0.2.2:5000/giris');
+      final url = Uri.parse('http://172.18.151.65:5000/giris');
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -46,18 +63,13 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
         }),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       final cevap = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder:
-                (context) => AnaSayfa(kullaniciEmail: emailController.text),
-          ),
+          '/anasayfa',
+          arguments: emailController.text,
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -65,7 +77,6 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
         );
       }
     } catch (e) {
-      print('Hata oluştu: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Sunucuya bağlanılamadı. Hata: $e')),
       );
@@ -121,7 +132,7 @@ class _KayitSayfasiState extends State<KayitSayfasi> {
 
   Future<void> kaydol() async {
     try {
-      final url = Uri.parse('http://10.0.2.2:5000/kaydol');
+      final url = Uri.parse('http://172.18.151.65:5000/kaydol');
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -133,23 +144,19 @@ class _KayitSayfasiState extends State<KayitSayfasi> {
         }),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       final cevap = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(cevap['durum'] ?? 'Kayıt başarılı!')),
         );
-        Navigator.pop(context); // Başarılı kayıt sonrası giriş ekranına dön
+        Navigator.pop(context); // Giriş ekranına dön
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(cevap['hata'] ?? 'Bir hata oluştu')),
         );
       }
     } catch (e) {
-      print('Hata oluştu: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Sunucuya bağlanılamadı. Hata: $e')),
       );
@@ -179,9 +186,7 @@ class _KayitSayfasiState extends State<KayitSayfasi> {
             ),
             TextField(
               controller: dogumTarihiController,
-              decoration: InputDecoration(
-                labelText: 'Doğum Tarihi (GG/AA/YYYY)',
-              ),
+              decoration: InputDecoration(labelText: 'Doğum Tarihi (GG/AA/YYYY)'),
             ),
             SizedBox(height: 20),
             ElevatedButton(onPressed: kaydol, child: Text('Kaydol')),
@@ -215,25 +220,27 @@ class _AnaSayfaState extends State<AnaSayfa> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => IcerikAraSayfasi(
-                          kullaniciEmail: widget.kullaniciEmail,
-                        ),
-                  ),
-                );
+                Navigator.pushNamed(context, '/arama', arguments: widget.kullaniciEmail);
               },
               child: Text('İçerik Ara ve Ekle'),
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushNamed(
-                  context, '/devam',
-                );
+                Navigator.pushNamed(context, '/devam');
               },
               child: Text('Devam Noktası Tahmini'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/oneri');
+              },
+              child: Text("Öneri Chatbotu"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/profil', arguments: widget.kullaniciEmail);
+              },
+              child: Text("Profilim"),
             ),
           ],
         ),
@@ -241,6 +248,7 @@ class _AnaSayfaState extends State<AnaSayfa> {
     );
   }
 }
+
 /*class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

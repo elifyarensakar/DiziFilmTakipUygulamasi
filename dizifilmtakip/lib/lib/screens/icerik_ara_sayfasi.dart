@@ -1,4 +1,3 @@
-// TODO Implement this library.
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -18,97 +17,107 @@ class _IcerikAraSayfasiState extends State<IcerikAraSayfasi> {
   List<dynamic> icerikListesi = [];
   bool loading = false;
 
+  final String baseUrl = 'http://172.18.151.65:5000'; // Gerçek cihazda IP ile değiştir
+
   Future<void> icerikAra(String aramaKelimesi) async {
-    setState(() {
-      loading = true;
-    });
+  setState(() {
+    loading = true;
+  });
 
-    final url = Uri.parse('http://10.0.2.2:5000/icerik-listesi?q=$aramaKelimesi');
+  try {
+    final url = Uri.parse('http://172.18.151.65:5000/icerik-listesi?q=$aramaKelimesi');
+    final response = await http.get(url);
 
-    try {
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final List<dynamic> cevap = jsonDecode(response.body);
-        setState(() {
-          icerikListesi = cevap;
-          loading = false;
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('İçerik bulunamadı.')),
-        );
-        setState(() {
-          loading = false;
-        });
-      }
-    } catch (e) {
-      print('Hata: $e');
+    if (response.statusCode == 200) {
+      final List<dynamic> cevap = jsonDecode(response.body);
       setState(() {
+        icerikListesi = cevap;
         loading = false;
       });
+    } else {
+      setState(() {
+        icerikListesi = [];
+        loading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Sunucudan cevap alınamadı")),
+      );
+    }
+  } catch (e) {
+    setState(() {
+      icerikListesi = [];
+      loading = false;
+    });
+    print("Arama hatası: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Bağlantı hatası: $e")),
+    );
+  }
+}
+
+
+  Future<void> icerikEkle(Map<String, dynamic> secilenIcerik) async {
+    String baslik = secilenIcerik['Title'] ?? 'Başlıksız';
+    String tur = secilenIcerik['Type'] ?? 'movie';
+    String id = secilenIcerik['imdbID'] ?? DateTime.now().millisecondsSinceEpoch.toString();
+
+    int? bolumNumarasi;
+
+    if (tur == "series") {
+      bolumController.clear();
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Kaçıncı bölümdesin?'),
+          content: TextField(
+            controller: bolumController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(hintText: 'Bölüm Numarası'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Tamam'),
+            ),
+          ],
+        ),
+      );
+      bolumNumarasi = int.tryParse(bolumController.text) ?? 1;
+    }
+
+    final url = Uri.parse('$baseUrl/izleme-kaydi-ekle');
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "userId": widget.kullaniciEmail,
+        "contentId": id,
+        "title": baslik,
+        "type": tur == "series" ? "dizi" : "film",
+        "status": "izleniyor",
+        "currentSeason": tur == "series" ? 1 : null,
+        "currentEpisode": bolumNumarasi ?? 1
+      }),
+    );
+
+    final cevap = jsonDecode(response.body);
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("İçerik başarıyla eklendi.")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(cevap['message'] ?? 'Bir hata oluştu')),
+      );
     }
   }
 
-  Future<void> icerikEkle(Map<String, dynamic> secilenIcerik) async {
-    String baslik = secilenIcerik['Title'];
-    String tur = secilenIcerik['Type']; // movie veya series
-
-    int? bolumNumarasi;
-    if (tur == "series") {
-      // Eğer dizi seçildiyse bölüm sor
-      await showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Kaçıncı Bölümdesin?'),
-            content: TextField(
-              controller: bolumController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(hintText: 'Bölüm Numarası'),
-            ),
-            actions: [
-              TextButton(
-                child: Text('Tamam'),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          );
-        },
-      );
-      bolumNumarasi = int.tryParse(bolumController.text);
-    }
-
-    final ekleUrl = Uri.parse('http://10.0.2.2:5000/icerik-ekle');
-
-    try {
-      final response = await http.post(
-        ekleUrl,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "email": widget.kullaniciEmail,
-          "baslik": baslik,
-          "tur": tur,
-          "bolum": bolumNumarasi
-        }),
-      );
-
-      final cevap = jsonDecode(response.body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(cevap['durum'] ?? 'İçerik eklendi!')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(cevap['hata'] ?? 'Bir hata oluştu')),
-        );
-      }
-    } catch (e) {
-      print('Hata oluştu: $e');
-    }
+  @override
+  void dispose() {
+    aramaController.dispose();
+    bolumController.dispose();
+    super.dispose();
   }
 
   @override
@@ -134,24 +143,24 @@ class _IcerikAraSayfasiState extends State<IcerikAraSayfasi> {
               ),
             ),
             SizedBox(height: 20),
-            loading
-                ? CircularProgressIndicator()
-                : Expanded(
-                    child: ListView.builder(
-                      itemCount: icerikListesi.length,
-                      itemBuilder: (context, index) {
-                        final item = icerikListesi[index];
-                        return ListTile(
-                          title: Text(item['Title']),
-                          subtitle: Text(item['Type']),
-                          trailing: Icon(Icons.add),
-                          onTap: () {
-                            icerikEkle(item);
+            Expanded(
+              child: loading
+                  ? Center(child: CircularProgressIndicator())
+                  : icerikListesi.isEmpty
+                      ? Center(child: Text("Sonuç bulunamadı"))
+                      : ListView.builder(
+                          itemCount: icerikListesi.length,
+                          itemBuilder: (context, index) {
+                            final item = icerikListesi[index];
+                            return ListTile(
+                              title: Text(item['Title'] ?? 'Başlıksız'),
+                              subtitle: Text(item['Type'] ?? ''),
+                              trailing: Icon(Icons.add),
+                              onTap: () => icerikEkle(item),
+                            );
                           },
-                        );
-                      },
-                    ),
-                  ),
+                        ),
+            ),
           ],
         ),
       ),

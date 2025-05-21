@@ -1,0 +1,28 @@
+# ninja log v6
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_windows.dll	85a578de162cad75
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_export.h	85a578de162cad75
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_windows.h	85a578de162cad75
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_messenger.h	85a578de162cad75
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_plugin_registrar.h	85a578de162cad75
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_texture_registrar.h	85a578de162cad75
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/cpp_client_wrapper/core_implementations.cc	85a578de162cad75
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/cpp_client_wrapper/standard_codec.cc	85a578de162cad75
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/cpp_client_wrapper/plugin_registrar.cc	85a578de162cad75
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/cpp_client_wrapper/flutter_engine.cc	85a578de162cad75
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/cpp_client_wrapper/flutter_view_controller.cc	85a578de162cad75
+44	28537	7694650403720154	flutter/_phony_	85a578de162cad75
+44	28537	7694650403720154	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/out/build/x64-Debug/flutter/_phony_	85a578de162cad75
+28600	28853	7694650689276468	runner/CMakeFiles/dizifilmtakip.dir/Runner.rc.res	5859cdb58ffa9b1e
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_windows.dll	85a578de162cad75
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_export.h	85a578de162cad75
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_windows.h	85a578de162cad75
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_messenger.h	85a578de162cad75
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_plugin_registrar.h	85a578de162cad75
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/flutter_texture_registrar.h	85a578de162cad75
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/cpp_client_wrapper/core_implementations.cc	85a578de162cad75
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/cpp_client_wrapper/standard_codec.cc	85a578de162cad75
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/cpp_client_wrapper/plugin_registrar.cc	85a578de162cad75
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/cpp_client_wrapper/flutter_engine.cc	85a578de162cad75
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/flutter/ephemeral/cpp_client_wrapper/flutter_view_controller.cc	85a578de162cad75
+136	11441	7694650857473081	flutter/_phony_	85a578de162cad75
+136	11441	7694650857473081	C:/Users/Elif yaren/Desktop/DiziFilmTakipUygulamas-/dizifilmtakip/windows/out/build/x64-Debug/flutter/_phony_	85a578de162cad75
