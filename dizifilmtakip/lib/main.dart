@@ -6,6 +6,7 @@ import 'package:dizifilmtakip/lib/screens/icerik_ara_sayfasi.dart';
 import 'package:dizifilmtakip/lib/screens/devam_tahmin_ekrani.dart';
 import 'package:dizifilmtakip/lib/screens/oneri_chatbot_ekrani.dart';
 import 'package:dizifilmtakip/lib/screens/profil_sayfasi.dart';
+import 'package:dizifilmtakip/lib/screens/anasayfa.dart';
 
 void main() {
   runApp(MyApp());
@@ -56,9 +57,7 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
   Future<void> girisYap() async {
     setState(() => yukleniyor = true);
 
-    final url = Uri.parse(
-      'http://172.18.151.65:5000/giris',
-    ); // IP adresini kendi bilgisayarına göre değiştir
+    final url = Uri.parse('http://172.18.151.65:5000/giris');
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -72,10 +71,13 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
     final cevap = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      Navigator.pushNamed(
+      Navigator.push(
         context,
-        '/anasayfa',
-        arguments: emailController.text.trim(),
+        MaterialPageRoute(
+          builder:
+              (context) =>
+                  BottomNavSayfasi(kullaniciEmail: emailController.text.trim()),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -303,82 +305,50 @@ class _KayitSayfasiState extends State<KayitSayfasi> {
   }
 }
 
-// ======================== ANA SAYFA ========================
-
-class AnaSayfa extends StatelessWidget {
+class BottomNavSayfasi extends StatefulWidget {
   final String kullaniciEmail;
-  AnaSayfa({required this.kullaniciEmail});
+  BottomNavSayfasi({required this.kullaniciEmail});
+
+  @override
+  State<BottomNavSayfasi> createState() => _BottomNavSayfasiState();
+}
+
+class _BottomNavSayfasiState extends State<BottomNavSayfasi> {
+  int seciliIndex = 1;
 
   @override
   Widget build(BuildContext context) {
+    final sayfalar = [
+      OneriChatbotEkrani(),
+      AnaSayfa(kullaniciEmail: widget.kullaniciEmail),
+      ProfilSayfasi(kullaniciEmail: widget.kullaniciEmail),
+      DevamTahminEkrani(),
+    ];
+
     return Scaffold(
-      backgroundColor: Color(0xFF03003F),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Center(
-                child: Text(
-                  "Anasayfa",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              SizedBox(height: 40),
-              TextField(
-                style: TextStyle(color: Colors.black),
-                decoration: InputDecoration(
-                  hintText: 'Dizi veya Film ara ...',
-                  prefixIcon: Icon(Icons.search, color: Colors.black),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 16,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ],
+      body: sayfalar[seciliIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: seciliIndex,
+        onTap: (index) {
+          setState(() {
+            seciliIndex = index;
+          });
+        },
+        backgroundColor: Colors.grey.shade300,
+        selectedItemColor: Colors.deepPurple,
+        unselectedItemColor: Colors.black87,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            label: '',
           ),
-        ),
-      ),
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.only(bottom: 8, top: 4),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade300,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          selectedItemColor: Colors.deepPurple,
-          unselectedItemColor: Colors.black87,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          onTap: (index) {},
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline),
-              label: "",
-            ),
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: ""),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              label: "",
-            ),
-            BottomNavigationBarItem(icon: Icon(Icons.help_outline), label: ""),
-          ],
-        ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.help_outline), label: ''),
+        ],
       ),
     );
   }

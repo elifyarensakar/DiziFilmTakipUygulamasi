@@ -130,7 +130,7 @@ class _ProfilSayfasiState extends State<ProfilSayfasi> {
                 ),
                 _profilButton("Sil", () {
                   if (izlemeListesi.isNotEmpty) {
-                    icerikSil(izlemeListesi.last['id']); // örnek: sonuncuyu sil
+                    icerikSil(izlemeListesi.last['id']);
                   }
                 }),
               ],
