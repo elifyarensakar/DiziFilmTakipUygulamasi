@@ -87,7 +87,7 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Figma'da dark UI varsa
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -305,94 +305,90 @@ class _KayitSayfasiState extends State<KayitSayfasi> {
 
 // ======================== ANA SAYFA ========================
 
-class AnaSayfa extends StatefulWidget {
+// ======================== FİGMA UYUMLU ANA SAYFA ========================
+
+class AnaSayfa extends StatelessWidget {
   final String kullaniciEmail;
   AnaSayfa({required this.kullaniciEmail});
 
   @override
-  _AnaSayfaState createState() => _AnaSayfaState();
-}
-
-class _AnaSayfaState extends State<AnaSayfa> {
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Dark UI uyumu
-      appBar: AppBar(
-        title: Text('Ana Sayfa'),
-        backgroundColor: Colors.deepPurple,
+      backgroundColor: Color(0xFF03003F), // Figma'daki lacivert arka plan
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Center(
+                child: Text(
+                  "Anasayfa",
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              SizedBox(height: 40),
+              TextField(
+                style: TextStyle(color: Colors.black),
+                decoration: InputDecoration(
+                  hintText: 'Dizi veya Film ara ...',
+                  prefixIcon: Icon(Icons.search, color: Colors.black),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 16,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              // Geri kalan içerik burada olacaksa eklenebilir
+            ],
+          ),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hoş geldin, ${widget.kullaniciEmail}!',
-              style: TextStyle(fontSize: 20, color: Colors.white),
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.only(bottom: 8, top: 4),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade300,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          selectedItemColor: Colors.deepPurple,
+          unselectedItemColor: Colors.black87,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          onTap: (index) {
+            // Navigation işlemleri
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline),
+              label: "",
             ),
-            SizedBox(height: 30),
-
-            _menuButton(
-              icon: Icons.search,
-              text: 'İçerik Ara ve Ekle',
-              route: '/arama',
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: ""),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              label: "",
             ),
-            _menuButton(
-              icon: Icons.timeline,
-              text: 'Devam Noktası Tahmini',
-              route: '/quiz',
-            ),
-            _menuButton(
-              icon: Icons.chat_bubble_outline,
-              text: 'Öneri Chatbotu',
-              route: '/chatbot',
-            ),
-            _menuButton(
-              icon: Icons.person_outline,
-              text: 'Profilim',
-              route: '/profil',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.help_outline), label: ""),
           ],
         ),
       ),
     );
   }
-
-  Widget _menuButton({
-    required IconData icon,
-    required String text,
-    required String route,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: ElevatedButton.icon(
-        onPressed: () {
-          if (route == '/profil' || route == '/arama') {
-            Navigator.pushNamed(
-              context,
-              route,
-              arguments: widget.kullaniciEmail,
-            );
-          } else {
-            Navigator.pushNamed(context, route);
-          }
-        },
-        icon: Icon(icon, size: 24),
-        label: Text(text, style: TextStyle(fontSize: 16)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.deepPurpleAccent,
-          minimumSize: Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          alignment: Alignment.centerLeft,
-          padding: EdgeInsets.symmetric(horizontal: 20),
-        ),
-      ),
-    );
-  }
 }
+
 
 
 
