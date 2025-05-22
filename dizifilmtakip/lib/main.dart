@@ -305,8 +305,6 @@ class _KayitSayfasiState extends State<KayitSayfasi> {
 
 // ======================== ANA SAYFA ========================
 
-// ======================== FİGMA UYUMLU ANA SAYFA ========================
-
 class AnaSayfa extends StatelessWidget {
   final String kullaniciEmail;
   AnaSayfa({required this.kullaniciEmail});
@@ -314,7 +312,7 @@ class AnaSayfa extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF03003F), // Figma'daki lacivert arka plan
+      backgroundColor: Color(0xFF03003F),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
@@ -349,7 +347,6 @@ class AnaSayfa extends StatelessWidget {
                   ),
                 ),
               ),
-              // Geri kalan içerik burada olacaksa eklenebilir
             ],
           ),
         ),
@@ -368,9 +365,7 @@ class AnaSayfa extends StatelessWidget {
           unselectedItemColor: Colors.black87,
           showSelectedLabels: false,
           showUnselectedLabels: false,
-          onTap: (index) {
-            // Navigation işlemleri
-          },
+          onTap: (index) {},
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.chat_bubble_outline),
