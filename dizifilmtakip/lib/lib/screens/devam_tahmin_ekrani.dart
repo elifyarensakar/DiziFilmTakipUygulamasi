@@ -115,40 +115,6 @@ class _DevamTahminEkraniState extends State<DevamTahminEkrani> {
                   ),
                 ),
               ),
-            Spacer(),
-
-            Container(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              child: BottomNavigationBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                type: BottomNavigationBarType.fixed,
-                selectedItemColor: Colors.deepPurple,
-                unselectedItemColor: Colors.black87,
-                showSelectedLabels: false,
-                showUnselectedLabels: false,
-                onTap: (index) {},
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.chat_bubble_outline),
-                    label: '',
-                  ),
-                  BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person_outline),
-                    label: '',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.help_outline),
-                    label: '',
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
