@@ -1,3 +1,401 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'package:dizifilmtakip/lib/screens/icerik_ara_sayfasi.dart';
+import 'package:dizifilmtakip/lib/screens/devam_tahmin_ekrani.dart';
+import 'package:dizifilmtakip/lib/screens/oneri_chatbot_ekrani.dart';
+import 'package:dizifilmtakip/lib/screens/profil_sayfasi.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Dizi Film Takip',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => GirisSayfasi(),
+        '/kayit': (context) => KayitSayfasi(),
+        '/anasayfa': (context) {
+          final email = ModalRoute.of(context)!.settings.arguments as String;
+          return AnaSayfa(kullaniciEmail: email);
+        },
+        '/arama': (context) {
+          final email = ModalRoute.of(context)!.settings.arguments as String;
+          return IcerikAraSayfasi(kullaniciEmail: email);
+        },
+        '/quiz': (context) => DevamTahminEkrani(),
+        '/chatbot': (context) => OneriChatbotEkrani(),
+        '/profil': (context) {
+          final email = ModalRoute.of(context)!.settings.arguments as String;
+          return ProfilSayfasi(kullaniciEmail: email);
+        },
+      },
+    );
+  }
+}
+
+// ======================== GİRİŞ SAYFASI ========================
+
+class GirisSayfasi extends StatefulWidget {
+  @override
+  _GirisSayfasiState createState() => _GirisSayfasiState();
+}
+
+class _GirisSayfasiState extends State<GirisSayfasi> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController sifreController = TextEditingController();
+  bool yukleniyor = false;
+
+  Future<void> girisYap() async {
+    setState(() => yukleniyor = true);
+
+    final url = Uri.parse(
+      'http://172.18.151.65:5000/giris',
+    ); // IP adresini kendi bilgisayarına göre değiştir
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "email": emailController.text.trim(),
+        "sifre": sifreController.text,
+      }),
+    );
+
+    setState(() => yukleniyor = false);
+    final cevap = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      Navigator.pushNamed(
+        context,
+        '/anasayfa',
+        arguments: emailController.text.trim(),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(cevap['hata'] ?? 'Giriş başarısız')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black, // Figma'da dark UI varsa
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Giriş Yap',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 40),
+
+              TextField(
+                controller: emailController,
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'E-posta',
+                  labelStyle: TextStyle(color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.grey[900],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+
+              TextField(
+                controller: sifreController,
+                obscureText: true,
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Şifre',
+                  labelStyle: TextStyle(color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.grey[900],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: yukleniyor ? null : girisYap,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child:
+                      yukleniyor
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text('Giriş Yap', style: TextStyle(fontSize: 16)),
+                ),
+              ),
+              SizedBox(height: 12),
+
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/kayit');
+                },
+                child: Text(
+                  'Hesabın yok mu? Kaydol',
+                  style: TextStyle(color: Colors.deepPurpleAccent),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ======================== KAYIT SAYFASI ========================
+
+class KayitSayfasi extends StatefulWidget {
+  @override
+  _KayitSayfasiState createState() => _KayitSayfasiState();
+}
+
+class _KayitSayfasiState extends State<KayitSayfasi> {
+  final emailController = TextEditingController();
+  final sifreController = TextEditingController();
+  final kullaniciAdiController = TextEditingController();
+  final dogumTarihiController = TextEditingController();
+  bool yukleniyor = false;
+
+  Future<void> kaydol() async {
+    setState(() => yukleniyor = true);
+
+    final response = await http.post(
+      Uri.parse('http://172.18.151.65:5000/kaydol'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "email": emailController.text.trim(),
+        "sifre": sifreController.text,
+        "kullanici_adi": kullaniciAdiController.text,
+        "dogum_tarihi": dogumTarihiController.text,
+      }),
+    );
+
+    setState(() => yukleniyor = false);
+    final cevap = jsonDecode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(cevap['durum'] ?? 'Kayıt başarılı')),
+      );
+      Navigator.pop(context); // Giriş ekranına geri dön
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(cevap['hata'] ?? 'Kayıt başarısız')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(height: 40),
+                Text(
+                  'Kayıt Ol',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 32),
+
+                buildTextField("E-posta", emailController),
+                SizedBox(height: 16),
+
+                buildTextField("Şifre", sifreController, obscure: true),
+                SizedBox(height: 16),
+
+                buildTextField("Kullanıcı Adı", kullaniciAdiController),
+                SizedBox(height: 16),
+
+                buildTextField(
+                  "Doğum Tarihi (GG/AA/YYYY)",
+                  dogumTarihiController,
+                ),
+                SizedBox(height: 24),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: yukleniyor ? null : kaydol,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child:
+                        yukleniyor
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text('Kaydol', style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Zaten hesabın var mı? Giriş Yap',
+                    style: TextStyle(color: Colors.deepPurpleAccent),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildTextField(
+    String label,
+    TextEditingController controller, {
+    bool obscure = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.grey),
+        filled: true,
+        fillColor: Colors.grey[900],
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+}
+
+// ======================== ANA SAYFA ========================
+
+class AnaSayfa extends StatefulWidget {
+  final String kullaniciEmail;
+  AnaSayfa({required this.kullaniciEmail});
+
+  @override
+  _AnaSayfaState createState() => _AnaSayfaState();
+}
+
+class _AnaSayfaState extends State<AnaSayfa> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black, // Dark UI uyumu
+      appBar: AppBar(
+        title: Text('Ana Sayfa'),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hoş geldin, ${widget.kullaniciEmail}!',
+              style: TextStyle(fontSize: 20, color: Colors.white),
+            ),
+            SizedBox(height: 30),
+
+            _menuButton(
+              icon: Icons.search,
+              text: 'İçerik Ara ve Ekle',
+              route: '/arama',
+            ),
+            _menuButton(
+              icon: Icons.timeline,
+              text: 'Devam Noktası Tahmini',
+              route: '/quiz',
+            ),
+            _menuButton(
+              icon: Icons.chat_bubble_outline,
+              text: 'Öneri Chatbotu',
+              route: '/chatbot',
+            ),
+            _menuButton(
+              icon: Icons.person_outline,
+              text: 'Profilim',
+              route: '/profil',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _menuButton({
+    required IconData icon,
+    required String text,
+    required String route,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: ElevatedButton.icon(
+        onPressed: () {
+          if (route == '/profil' || route == '/arama') {
+            Navigator.pushNamed(
+              context,
+              route,
+              arguments: widget.kullaniciEmail,
+            );
+          } else {
+            Navigator.pushNamed(context, route);
+          }
+        },
+        icon: Icon(icon, size: 24),
+        label: Text(text, style: TextStyle(fontSize: 16)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.deepPurpleAccent,
+          minimumSize: Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          alignment: Alignment.centerLeft,
+          padding: EdgeInsets.symmetric(horizontal: 20),
+        ),
+      ),
+    );
+  }
+}
+
+
+
 
 
 /*class MyApp extends StatelessWidget {
