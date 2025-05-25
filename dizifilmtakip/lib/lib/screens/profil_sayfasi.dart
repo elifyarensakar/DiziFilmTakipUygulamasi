@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:dizifilmtakip/lib/screens/icerik_ara_sayfasi.dart';
 
 class ProfilSayfasi extends StatefulWidget {
   final String kullaniciEmail;
@@ -12,7 +13,6 @@ class ProfilSayfasi extends StatefulWidget {
 
 class _ProfilSayfasiState extends State<ProfilSayfasi> {
   List<Map<String, dynamic>> izlemeListesi = [];
-  TextEditingController icerikController = TextEditingController();
   final String baseUrl = 'http://172.18.151.65:5000';
 
   @override
@@ -22,9 +22,7 @@ class _ProfilSayfasiState extends State<ProfilSayfasi> {
   }
 
   Future<void> izlemeListesiniGetir() async {
-    final url = Uri.parse(
-      '$baseUrl/izleme-kaydi-listele/${widget.kullaniciEmail}',
-    );
+    final url = Uri.parse('$baseUrl/izleme-kaydi-listele/${widget.kullaniciEmail}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -33,44 +31,92 @@ class _ProfilSayfasiState extends State<ProfilSayfasi> {
         izlemeListesi = data.cast<Map<String, dynamic>>();
       });
     } else {
-      print('Listeleme hatası: ${response.statusCode}');
-    }
-  }
-
-  Future<void> icerikEkle() async {
-    final url = Uri.parse('$baseUrl/izleme-kaydi-ekle');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        "userId": widget.kullaniciEmail,
-        "contentId": DateTime.now().millisecondsSinceEpoch.toString(),
-        "title": icerikController.text.trim(),
-        "type": "dizi",
-        "status": "izleniyor",
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      icerikController.clear();
-      await izlemeListesiniGetir();
-    } else {
-      print('Ekleme hatası: ${response.statusCode}');
+      _showToast('Listeleme hatası: ${response.statusCode}');
     }
   }
 
   Future<void> icerikSil(String watchId) async {
-    final url = Uri.parse(
-      '$baseUrl/izleme-kaydi-sil/${widget.kullaniciEmail}/$watchId',
-    );
+    final url = Uri.parse('$baseUrl/izleme-kaydi-sil/${widget.kullaniciEmail}/$watchId');
     final response = await http.delete(url);
 
     if (response.statusCode == 200) {
+      _showToast("Silme başarılı");
       await izlemeListesiniGetir();
     } else {
-      print('Silme hatası: ${response.statusCode}');
+      _showToast('Silme hatası: ${response.statusCode}');
     }
   }
+
+  void _showToast(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+  // Güncelleme dialogu
+void _durumGuncelleDialog(String watchId) {
+  String secilenDurum = "izleniyor";
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text("İçerik Durumunu Güncelle"),
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            return DropdownButton<String>(
+              value: secilenDurum,
+              isExpanded: true,
+              items: [
+                "izleniyor",
+                "tamamlandı",
+                "bırakıldı",
+                "izlenecek",
+              ].map((durum) {
+                return DropdownMenuItem(
+                  value: durum,
+                  child: Text(durum),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  secilenDurum = value!;
+                });
+              },
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await icerikDurumunuGuncelle(watchId, secilenDurum);
+            },
+            child: Text("Güncelle"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+// Backend'e PATCH isteği
+Future<void> icerikDurumunuGuncelle(String watchId, String yeniDurum) async {
+  final url = Uri.parse('$baseUrl/izleme-kaydi-guncelle/${widget.kullaniciEmail}/$watchId');
+
+  final response = await http.patch(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      "status": yeniDurum,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    _showToast("Durum güncellendi");
+    await izlemeListesiniGetir();
+  } else {
+    _showToast("Güncelleme hatası: ${response.statusCode}");
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -103,20 +149,7 @@ class _ProfilSayfasiState extends State<ProfilSayfasi> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "İsim - Soyisim:",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      "E-posta: ${widget.kullaniciEmail}",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      "Doğum Tarihi:",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    Text("E-posta: ${widget.kullaniciEmail}", style: TextStyle(color: Colors.white)),
                   ],
                 ),
               ),
@@ -127,50 +160,58 @@ class _ProfilSayfasiState extends State<ProfilSayfasi> {
                 children: [
                   ElevatedButton(
                     onPressed: izlemeListesiniGetir,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.lightBlueAccent,
-                    ),
-                    child: Text(
-                      "Listele",
-                      style: TextStyle(color: Colors.black),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: icerikEkle,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.lightBlueAccent,
-                    ),
-                    child: Text("Ekle", style: TextStyle(color: Colors.black)),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlueAccent),
+                    child: Text("Listele", style: TextStyle(color: Colors.black)),
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      if (izlemeListesi.isNotEmpty) {
-                        final id = izlemeListesi.last['id'];
-                        icerikSil(id);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.lightBlueAccent,
-                    ),
-                    child: Text("Sil", style: TextStyle(color: Colors.black)),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Güncelleme özelliği aktif değil"),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => IcerikAraSayfasi(
+                            kullaniciEmail: widget.kullaniciEmail,
+                          ),
                         ),
                       );
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.lightBlueAccent,
-                    ),
-                    child: Text(
-                      "Güncelle",
-                      style: TextStyle(color: Colors.black),
-                    ),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlueAccent),
+                    child: Text("Ekle", style: TextStyle(color: Colors.black)),
                   ),
+                  ElevatedButton(
+                      onPressed: () {
+                        if (izlemeListesi.isNotEmpty) {
+                          final sonIcerik = izlemeListesi.last;
+                          _durumGuncelleDialog(sonIcerik['id']);
+                        } else {
+                          _showToast("Güncellenecek içerik yok.");
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlueAccent),
+                      child: Text("Güncelle", style: TextStyle(color: Colors.black)),
+                    ),
                 ],
+              ),
+              SizedBox(height: 20),
+              Expanded(
+                child: izlemeListesi.isEmpty
+                    ? Center(child: Text("Henüz içerik eklenmemiş.", style: TextStyle(color: Colors.white70)))
+                    : ListView.builder(
+                        itemCount: izlemeListesi.length,
+                        itemBuilder: (context, index) {
+                          final icerik = izlemeListesi[index];
+                          return Card(
+                            color: Colors.white10,
+                            child: ListTile(
+                              title: Text(icerik['title'] ?? '-', style: TextStyle(color: Colors.white)),
+                              subtitle: Text("Durum: ${icerik['status']}", style: TextStyle(color: Colors.white60)),
+                              trailing: IconButton(
+                                icon: Icon(Icons.delete, color: Colors.redAccent),
+                                onPressed: () => icerikSil(icerik['id']),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
