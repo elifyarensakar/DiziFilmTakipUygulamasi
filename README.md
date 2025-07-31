@@ -47,7 +47,7 @@ Bu proje, kullanıcıların dizi ve film izleme deneyimlerini kişiselleştirebi
 
 ---
 
-## 👣 Katkı Kayıtları
+## Katkı Kayıtları
 
 Commit geçmişiyle tüm katkılar şeffaf biçimde doğrulanabilir:
 ```bash
