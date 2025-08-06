@@ -8,8 +8,7 @@ Bu proje, kullanıcıların dizi ve film izleme deneyimlerini kişiselleştirebi
 
 ### Profilim
 - Kullanıcı profili oluşturma, düzenleme ve takip
-- İzlenilen içeriklerin ve puanlamaların görüntülenmesi
-- Sosyal etkileşim: Başka kullanıcıların aktivitelerini görme
+- İzlenilen içeriklerin görüntülenmesi
 
 ### Chatbot
 - OpenAI GPT-4 API ile entegre akıllı öneri sistemi
